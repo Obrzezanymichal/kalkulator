@@ -1,166 +1,102 @@
 const display = document.querySelector('.calculator-screen');
-
 const buttons = document.querySelectorAll(".calculator-keys>button");
 
-let buttonNum = [];
-let buttonOperator = [];
-let buttonFunction = [];
-let cache = [];
-let cacheValue =  "";
+let currentOperator = null;  
+let operand1 = null;      
+let operand2 = null;   
+let cacheValue = "";          
+
 buttons.forEach((button) => {
-    if(button.classList.contains('operator')) {
-        buttonOperator.push(button);
-        const operator = button.value;
-        switch(operator) {
-            case '+':
-                button.addEventListener('click', (e) => {
-                    if (cacheValue !== "") {
-                        add(parseFloat(cacheValue));
-                    }
-                });
-                break;
-            case '-':
-                button.addEventListener('click', (e) => {
-                    if (cacheValue !== "") {
-                        subtract(parseFloat(cacheValue));
-                    }
-                });
-                break;
-            case '*':
-                button.addEventListener('click', (e) => {
-                    if (cacheValue !== "") {
-                        multiply(parseFloat(cacheValue));
-                    }
-                    // mnożenie
-                });
-                break;
-            case '/':
-                button.addEventListener('click', (e) => {
-                    if (cacheValue !== "") {
-                        split(parseFloat(cacheValue));
-                    }
-                    // dzielenie
-                });
-                break;
-        }
-    }else if(button.classList.contains('decimal')) {
+    if (button.classList.contains('operator')) {
         button.addEventListener('click', (e) => {
-   if (document.querySelector(".calculator-screen").innerText.split(".").length==1){
-    setDisplayValue(".");
-
-   }
-   console.log("1. ", document.querySelector(".calculator-screen").innerText)
-   console.log("2. ", document.querySelector(".calculator-screen").innerText.split("."))
-   console.log("3. ", document.querySelector(".calculator-screen").innerText.split(".").length==1)
-   console.log("4. ", document.querySelector(".calculator-screen").innerText.split(".").length==2)
-
-console.log(document.querySelector(".calculator-screen").innerText.split(".").length)
-
-
-
-        })
-
-        
-    }else if(button.classList.contains('all-clear')) {
-        buttonFunction.push(button);
-        button.addEventListener('click', (e) => {
+            if (cacheValue !== "") {
+                if (operand1 === null) {
+                    operand1 = parseFloat(cacheValue); 
+                    cacheValue = "";  
+                } else {
+                    operand2 = parseFloat(cacheValue);  
+                    equal(); 
+                    operand1 = parseFloat(display.innerText); 
+                }
+            }
+            currentOperator = e.target.value;  
+        });
+    } else if (button.classList.contains('decimal')) {
+        button.addEventListener('click', () => {
+            if (!cacheValue.includes(".")) {
+                cacheValue += ".";  
+                setDisplayValue(cacheValue);
+            }
+        });
+    } else if (button.classList.contains('all-clear')) {
+        button.addEventListener('click', () => {
             clearDisplay();
-            cache = [];
         });
-    }else if(button.classList.contains('equal-sign')) {
-        buttonFunction.push(button);
-        button.addEventListener('click', (e) => {
-            equal();
+    } else if (button.classList.contains('equal-sign')) {
+        button.addEventListener('click', () => {
+            if (cacheValue !== "") {
+                operand2 = parseFloat(cacheValue);  
+                equal(); 
+            }
         });
-    }else {
-        buttonNum.push(button);
-        buttonFunction.push(button);
+    } else {
         button.addEventListener('click', (e) => {
-            setDisplayValue(e.target.value);
-            console.log(e.target.value);
+            cacheValue += e.target.value;
+            setDisplayValue(cacheValue); 
         });
     }
-
 });
 
-
 function setDisplayValue(value) {
-    
-    display.innerText += value;
-    console.log("value:"+value)
-    cacheValue += value;
+    display.innerText = value;
 }
+
 function clearDisplay() {
-    display.innerText = "";
     cacheValue = "";
+    operand1 = null;
+    operand2 = null;
+    currentOperator = null;
+    setDisplayValue("");
 }
-let test = true;
-function add(a) {
-    cache.push(a);
-    console.log(cache);
-    if(cache.length >= 2) {
-        clearDisplay();
-        let sum = cache[0] + cache[1];
-        cache = [];
-        cache.push(sum);
-        setDisplayValue(cache);
-    }
-    else {
-        clearDisplay();
+
+function equal() {
+    let result;
+    
+    if (operand1 !== null && operand2 !== null && currentOperator !== null) {
+        switch (currentOperator) {
+            case "+":
+                result = operand1 + operand2;
+                break;
+            case "-":
+                result = operand1 - operand2;
+                break;
+            case "*":
+                result = operand1 * operand2;
+                break;
+            case "/":
+                if (operand2 === 0) {
+                    result = "Error";  
+                } else {
+                    result = operand1 / operand2;
+                }
+                break;
+            default:
+                return;
+        }
+        
+        setDisplayValue(result.toString());
+        operand1 = result;  
+        operand2 = null;
+        currentOperator = null;
+        cacheValue = "";
     }
 }
-function subtract(a) {
-    cache.push(a);
-    console.log(cache);
-    if(cache.length >= 2) {
-        clearDisplay();
-        let sum = cache[0] - cache[1];
-        cache = [];
-        cache.push(sum);
-        setDisplayValue(cache);
-    }
-    else {
-        clearDisplay();
-    }
 
 
-}
-function multiply(a) {
-    cache.push(a);
-    console.log(cache);
-    if(cache.length >= 2) {
-        clearDisplay();
-        let sum = cache[0] * cache[1];
-        cache = [];
-        cache.push(sum);
-        setDisplayValue(cache);
-    }
-    else {
-        clearDisplay();
-    }
-
-
-}
-function split(a) {
-    cache.push(a);
-    console.log(cache);
-    if(cache.length >= 2) {
-        clearDisplay();
-        let sum = cache[0] / cache[1];
-        cache = [];
-        cache.push(sum);
-        setDisplayValue(cache);
-    }
-    else {
-        clearDisplay();
-    }
-
-
-}
-function equal(){
+  
     // Sprawdź, jaki operator został wybrany jako ostatni i czy została podana liczba, wtedy wykonaj działanie ostatniego operatora.
     // Jeśli nie podano liczby, a kliknięto operator, wyświetl wartość z pamięci podręcznej (cache).
-}
+
 
 // Metoda/funkcja mnożenia
 
